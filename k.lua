@@ -48,7 +48,7 @@ local RolesOk, RolesModule = pcall(require, Shared:FindFirstChild("Roles"))
 local SfxOk, SfxModule = pcall(require, Shared:FindFirstChild("Sfx"))
 
 local WindUI = loadstring(game:HttpGet(
-    "https://raw.githubusercontent.com/victornotvik/Growblox/refs/heads/main/windui_adapter.lua"
+    "https://raw.githubusercontent.com/Footagesus/WindUI/refs/heads/main/main.lua"
 ))()
 
 ---------------------------------------------------------------------
@@ -97,7 +97,7 @@ local Misc = {
     UpHeld = false,   -- tombol ▲ di layar ditahan
     DownHeld = false, -- tombol ▼ di layar ditahan
     CustomName = true,          -- watermark nama (selalu aktif, mati hanya saat script ditutup)
-    NameText = "Kzoyz x Opus",  -- teks watermark
+    NameText = "Victor Ganteng",  -- teks watermark
 }
 
 -- Auto Clear World
@@ -331,7 +331,7 @@ function UI.runJobs()
         if job and now >= job.at then
             UI.Jobs[key] = nil
             local ok, err = pcall(job.fn)
-            if not ok then warn("[Kzoyz x Opus] UI job " .. tostring(key) .. ": " .. tostring(err)) end
+            if not ok then warn("[Victor Ganteng] UI job " .. tostring(key) .. ": " .. tostring(err)) end
         end
     end
 end
@@ -661,7 +661,7 @@ I18N.EN = {
     ["Isi URL webhook dulu"] = "Fill in the webhook URL first",
     ["Pesan tes masuk antrian"] = "Test message queued",
     ["URL webhook tidak valid"] = "Invalid webhook URL",
-    ["Tes notifikasi dari Kzoyz x Opus"] = "Test notification from Kzoyz x Opus",
+    ["Tes notifikasi dari Victor Ganteng"] = "Test notification from Victor Ganteng",
     -- pilihan dropdown
     ["Kiri → Kanan"] = "Left → Right", ["Semua pemain"] = "All players", ["Semua"] = "All",
     ["Depan"] = "Front", ["Break saja"] = "Break only", ["Place saja"] = "Place only",
@@ -1231,7 +1231,7 @@ do (function()
                     Hook.Status = "Executor tidak punya fungsi request"
                 else
                     local body = HttpService:JSONEncode({
-                        username = "Kzoyz x Opus",
+                        username = "Victor Ganteng",
                         content = ("**[%s]** %s"):format(LocalPlayer.Name, text),
                     })
                     local ok, res = pcall(req, {
@@ -1371,8 +1371,7 @@ local function findRefs()
             end
             if not Refs.Inv then
                 local ok, isInv = pcall(function()
-                    return getmetatable(v) == InventoryModule and type(rawget(v, "slots")) == "table"
-                        and rawget(v, "capacity") ~= nil
+                    return (getmetatable(v) == InventoryModule or (type(rawget(v, "slots")) == "table" and (rawget(v, "capacity") ~= nil or rawget(v, "maxSlots") ~= nil or type(rawget(v, "count")) == "function")))
                 end)
                 if ok and isInv then Refs.Inv = v end
             end
@@ -1520,7 +1519,19 @@ end
 -- Refresh 1 dropdown; error dicatat (tampil di tab Koneksi)
 function UI.ddRefresh(dd, labels)
     if not dd then return end
-    local ok, err = UI.exec(function() dd:Refresh(labels) end)
+    local function apply()
+        if type(dd.Refresh) == "function" then
+            dd:Refresh(labels)
+        elseif type(dd.SetValues) == "function" then
+            dd:SetValues(labels)
+        elseif type(dd.Set) == "function" then
+            dd:Set(labels)
+        end
+    end
+    local ok, err = UI.exec(apply)
+    if not ok then
+        pcall(apply)
+    end
     if ok then
         UI.DropOk = os.clock()
     else
@@ -1680,7 +1691,7 @@ local function sendSetTile(layer, x, y, id)
     if Refs.SetTile then
         local ok, err = pcall(Refs.SetTile, layer, x, y, id, false, false)
         if ok then return true end
-        warn("[Kzoyz x Opus] setTile game gagal, pakai remote langsung: " .. tostring(err))
+        warn("[Victor Ganteng] setTile game gagal, pakai remote langsung: " .. tostring(err))
     end
     if NetOk and type(Net) == "table" and type(Net.tile) == "table" then
         -- sama seperti game: layer 1 = fg, 2 = bg
@@ -1883,7 +1894,7 @@ function Anim.quickRefs()
                 if tu == "table" then
                     if not Refs.Inv then
                         local ok, isInv = pcall(function()
-                            return getmetatable(u) == InventoryModule and type(rawget(u, "slots")) == "table"
+                            return (getmetatable(u) == InventoryModule or (type(rawget(u, "slots")) == "table" and (rawget(u, "capacity") ~= nil or rawget(u, "maxSlots") ~= nil or type(rawget(u, "count")) == "function")))
                         end)
                         if ok and isInv then Refs.Inv = u end
                     end
@@ -4301,7 +4312,7 @@ local function startClear()
     task.spawn(function()
         local ok, e = pcall(clearLoop)
         if not ok then
-            warn("[Kzoyz x Opus] Auto Clear error: " .. tostring(e))
+            warn("[Victor Ganteng] Auto Clear error: " .. tostring(e))
             if Clear.Running then stopClear("Error: " .. tostring(e)) end
         end
     end)
@@ -5017,7 +5028,7 @@ local function startFarmer()
     task.spawn(function()
         local ok, e = pcall(farmerLoop)
         if not ok then
-            warn("[Kzoyz x Opus] Farmer error: " .. tostring(e))
+            warn("[Victor Ganteng] Farmer error: " .. tostring(e))
             if Farmer.Running then stopFarmer("Error: " .. tostring(e)) end
         end
     end)
@@ -5220,7 +5231,7 @@ local function startSpliceRoam()
     task.spawn(function()
         local ok, e = pcall(spliceRoamLoop, id)
         if not ok then
-            warn("[Kzoyz x Opus] Splice error: " .. tostring(e))
+            warn("[Victor Ganteng] Splice error: " .. tostring(e))
             if Splice.Running and Splice.stop then Splice.stop("Error: " .. tostring(e)) end
         end
     end)
@@ -5530,7 +5541,7 @@ local function pabrikBreak(o)
     end)
     Pabrik.Status = "Break " .. itemName(o.block) .. " di posisi pabrik"
     local ok, e = pcall(farmLoop, id)
-    if not ok then warn("[Kzoyz x Opus] Pabrik break error: " .. tostring(e)) end
+    if not ok then warn("[Victor Ganteng] Pabrik break error: " .. tostring(e)) end
     State.Running = false
     State.Override = nil
     State.Quiet = false
@@ -5911,7 +5922,7 @@ function Pabrik.start()
     task.spawn(function()
         local ok, e = pcall(pabrikLoop, id)
         if not ok then
-            warn("[Kzoyz x Opus] Pabrik error: " .. tostring(e))
+            warn("[Victor Ganteng] Pabrik error: " .. tostring(e))
             if Pabrik.Running then Pabrik.stop("Error: " .. tostring(e)) end
         end
     end)
@@ -6603,7 +6614,7 @@ function Vend.start()
     task.spawn(function()
         local ok, e = pcall(vendLoop, id)
         if not ok then
-            warn("[Kzoyz x Opus] Vending error: " .. tostring(e))
+            warn("[Victor Ganteng] Vending error: " .. tostring(e))
             if Vend.Running then Vend.stop("Error: " .. tostring(e)) end
         end
     end)
@@ -7188,7 +7199,7 @@ function Build.breakSession(o)
     end)
     Build.Status = ("Break %s di posisi break lahan (%d,%d)"):format(itemName(o.block), Build.BreakX, Build.BreakY)
     local ok, e = pcall(farmLoop, id)
-    if not ok then warn("[Kzoyz x Opus] Break lahan error: " .. tostring(e)) end
+    if not ok then warn("[Victor Ganteng] Break lahan error: " .. tostring(e)) end
     State.Running = false
     State.Override = nil
     State.Quiet = false
@@ -7563,7 +7574,7 @@ function Build.start()
     task.spawn(function()
         local ok, e = pcall(buildLoop, id)
         if not ok then
-            warn("[Kzoyz x Opus] Bangun Lahan error: " .. tostring(e))
+            warn("[Victor Ganteng] Bangun Lahan error: " .. tostring(e))
             if Build.Running then Build.stop("Error: " .. tostring(e)) end
         end
     end)
@@ -7682,7 +7693,7 @@ task.spawn(function()
 end)
 
 ---------------------------------------------------------------------
--- WATERMARK NAMA KZOYZ X OPUS (hanya di layar sendiri)
+-- WATERMARK NAMA Victor Ganteng (hanya di layar sendiri)
 ---------------------------------------------------------------------
 -- Nama asli (huruf gambar "BitmapText") disembunyikan, diganti teks beranimasi:
 -- warna gradient mengalir + denyut halus. Pemain lain tetap melihat nama asli.
@@ -8133,7 +8144,7 @@ do (function()
     end
     local ok = pcall(function()
         WindUI:Popup({
-            Title = "Kzoyz x Opus",
+            Title = "Victor Ganteng",
             Icon = "languages",
             Content = "Pilih bahasa menu\nChoose menu language",
             Buttons = {
@@ -8152,7 +8163,7 @@ do (function()
 end)() end
 
 local Window = I18N.wrap(WindUI:CreateWindow({
-    Title = "Kzoyz x Opus",
+    Title = "Victor Ganteng",
     Icon = "sprout",
     Author = "v5.9.0 | Tester",
     Folder = "KzoyzOpus",
@@ -8166,7 +8177,7 @@ local Window = I18N.wrap(WindUI:CreateWindow({
 -- Cadangan PC: kalau tombol susah dicari, tekan Insert.
 pcall(function()
     Window:EditOpenButton({
-        Title = "Kzoyz x Opus",
+        Title = "Victor Ganteng",
         Icon = "sprout",
         Draggable = true,
         OnlyMobile = false,
@@ -8176,7 +8187,7 @@ end)
 -- Kalau 1 elemen error, tab lain tetap dibuat
 local function safe(fn)
     local ok, err = pcall(fn)
-    if not ok then warn("[Kzoyz x Opus] UI error: " .. tostring(err)) end
+    if not ok then warn("[Victor Ganteng] UI error: " .. tostring(err)) end
 end
 
 -- Sidebar dikelompokkan: grup utama bisa dibuka / ditutup (isinya tab-tab)
@@ -8609,7 +8620,18 @@ end)
 safe(function()
     InvTab:Button({
         Title = "Refresh daftar",
-        Callback = function() UI.later("invForce", function() doInvRefresh(true) end) end,
+        Callback = function()
+            task.spawn(function()
+                if not Refs.Inv then
+                    pcall(Anim.quickRefs)
+                    if not Refs.Inv then findRefs() end
+                end
+                doInvRefresh(true)
+                local pids = placeableIds()
+                local count = pids and #pids or 0
+                notify("Inventori", ("Daftar diperbarui: %d item terdeteksi"):format(count), 3)
+            end)
+        end,
     })
 end)
 
@@ -8901,7 +8923,7 @@ do (function() -- fungsi sendiri: variabel di dalam tidak ikut batas 200 local
         Guard.BackText = nil
         task.spawn(function()
             local ok, err = pcall(resumeAll, saved, token)
-            if not ok then warn("[Kzoyz x Opus] Penjaga lanjut error: " .. tostring(err)) end
+            if not ok then warn("[Victor Ganteng] Penjaga lanjut error: " .. tostring(err)) end
             if Guard.Token == token and Guard.Mode == "back" then
                 Guard.Mode, Guard.Saved, Guard.BackText = "idle", nil, nil
             end
@@ -9135,7 +9157,7 @@ do (function() -- fungsi sendiri: variabel di dalam tidak ikut batas 200 local
         while alive() do
             local here = (Guard.Mode ~= "away" and Guard.Mode ~= "out") and playersHere() or {}
             local ok, err = pcall(Guard.tick, here)
-            if not ok then warn("[Kzoyz x Opus] Penjaga error: " .. tostring(err)) end
+            if not ok then warn("[Victor Ganteng] Penjaga error: " .. tostring(err)) end
             Guard.updateStatus(here)
             task.wait(0.5)
         end
@@ -10631,7 +10653,7 @@ do (function()
             return Vend.labels(m)
         end)
         if not ok then
-            warn("[Kzoyz x Opus] daftar item vending error: " .. tostring(labels))
+            warn("[Victor Ganteng] daftar item vending error: " .. tostring(labels))
             return 0, "error: " .. tostring(labels)
         end
         local info = ("tas %d | drop %d | vending %d"):format(st.inv, st.drop, st.vend)
@@ -10644,7 +10666,7 @@ do (function()
             end)
             if not okR then
                 Vend.ItemSig = nil
-                warn("[Kzoyz x Opus] refresh dropdown item vending gagal: " .. tostring(errR))
+                warn("[Victor Ganteng] refresh dropdown item vending gagal: " .. tostring(errR))
                 notify("Vending", "Daftar item gagal dimuat: " .. tostring(errR), 6)
                 return
             end
@@ -11533,7 +11555,7 @@ do (function()
                 end
                 local was = Hook.On
                 Hook.On = true
-                Hook.send("test", "Tes notifikasi dari Kzoyz x Opus")
+                Hook.send("test", "Tes notifikasi dari Victor Ganteng")
                 Hook.On = was
                 notify("Discord", "Pesan tes masuk antrian", 3)
             end,
@@ -11575,14 +11597,14 @@ do
     task.spawn(function()
         while alive() do
             local ok, err = pcall(UI.runJobs)
-            if not ok then warn("[Kzoyz x Opus] UI runner: " .. tostring(err)) end
+            if not ok then warn("[Victor Ganteng] UI runner: " .. tostring(err)) end
             task.wait(0.1)
         end
     end)
 end
 
 task.spawn(function()
-    reconnect("Kzoyz x Opus v5.2")
+    reconnect("Victor Ganteng v5.2")
     -- Penjaga dari config dinyalakan setelah data pemain ketemu
     -- (supaya pemain yang sudah ada dicatat dulu)
     if Config.saved("Penjaga", "On") == true and alive() then
