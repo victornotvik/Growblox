@@ -30,22 +30,22 @@ local RunService = game:GetService("RunService")
 local VirtualUser = game:GetService("VirtualUser")
 local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui", 5) or LocalPlayer:FindFirstChild("PlayerGui")
 
-local Shared = ReplicatedStorage:WaitForChild("Shared")
-local WorldRemotes = ReplicatedStorage:WaitForChild("WorldRemotes")
+local Shared = ReplicatedStorage:WaitForChild("Shared", 5) or ReplicatedStorage:FindFirstChild("Shared")
+local WorldRemotes = ReplicatedStorage:WaitForChild("WorldRemotes", 5) or ReplicatedStorage:FindFirstChild("WorldRemotes")
 -- Remote lama (versi game sebelum ByteNet). Hanya dipakai kalau fungsi baru tidak ada.
-local SetTileRemote = WorldRemotes:FindFirstChild("SetTile")
+local SetTileRemote = WorldRemotes and WorldRemotes:FindFirstChild("SetTile")
 
-local ItemDB = require(Shared.ItemDB)
-local InventoryModule = require(Shared.Inventory)
-local NetOk, Net = pcall(require, Shared.Net)
+local ItemDB = Shared and require(Shared:WaitForChild("ItemDB", 5))
+local InventoryModule = Shared and require(Shared:WaitForChild("Inventory", 5))
+local NetOk, Net = pcall(function() return require(Shared:WaitForChild("Net", 5)) end)
 
-local GameGui = PlayerGui:WaitForChild("GameGui")
-local ParticlesOk, ParticlesModule = pcall(require, GameGui:WaitForChild("Particles"))
-local MenuModOk, MenuModule = pcall(require, GameGui:WaitForChild("WorldMenu"))
-local RolesOk, RolesModule = pcall(require, Shared:FindFirstChild("Roles"))
-local SfxOk, SfxModule = pcall(require, Shared:FindFirstChild("Sfx"))
+local GameGui = PlayerGui and (PlayerGui:WaitForChild("GameGui", 5) or PlayerGui:FindFirstChild("GameGui"))
+local ParticlesOk, ParticlesModule = pcall(function() return require(GameGui:WaitForChild("Particles", 5)) end)
+local MenuModOk, MenuModule = pcall(function() return require(GameGui:WaitForChild("WorldMenu", 5)) end)
+local RolesOk, RolesModule = pcall(function() return require(Shared:WaitForChild("Roles", 5)) end)
+local SfxOk, SfxModule = pcall(function() return require(Shared:WaitForChild("Sfx", 5)) end)
 
 local WindUI = loadstring(game:HttpGet(
     "https://raw.githubusercontent.com/victornotvik/Growblox/refs/heads/main/windui.lua"
@@ -348,7 +348,7 @@ local PlacedAt = {}   -- kapan tile di-place
 --       1. teks utuh (judul & deskripsi menu) dari daftar EN
 --       2. teks yang berubah-ubah (status, notifikasi) per frasa dari daftar PH
 --   - Menu WindUI dibungkus (I18N.wrap) supaya judul, deskripsi & isi status ikut diterjemahkan.
-local I18N = { Lang = "id", Saved = "id", Ask = true }
+local I18N = { Lang = "id", Saved = "id", Ask = false }
 
 do (function() -- fungsi sendiri: variabel di dalam tidak ikut batas 200 local
 
@@ -8140,7 +8140,7 @@ flyButton("▼", 40, function(v) Misc.DownHeld = v end)
 ---------------------------------------------------------------------
 -- Pilih bahasa saat execute (sebelum menu dibuat, karena teks menu dipasang sekali)
 do (function()
-    if not I18N.Ask and Config.saved("Bahasa", "Saved") then return end
+    if not I18N.Ask then return end
     local chosen, late = false, false
     local function pick(lang)
         if late then
