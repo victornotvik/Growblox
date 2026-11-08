@@ -4,6 +4,30 @@ for _, key in ipairs({ "__KzoyzOpus", "__GTFarm" }) do -- __GTFarm = nama versi 
     if G[key] and G[key].Cleanup then pcall(G[key].Cleanup) end
     G[key] = nil
 end
+
+-- Bersihkan semua GUI lama agar tidak duplikasi
+pcall(function()
+    local CoreGui = game:GetService("CoreGui")
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+    local PlayerGui = LocalPlayer and LocalPlayer:FindFirstChild("PlayerGui")
+    for _, parent in ipairs({ CoreGui, PlayerGui }) do
+        if parent then
+            for _, child in ipairs(parent:GetChildren()) do
+                if child:IsA("ScreenGui") and (
+                    string.find(child.Name, "WindUI") or
+                    string.find(child.Name, "Kzoyz") or
+                    string.find(child.Name, "Victor") or
+                    child.Name == "GridGui" or
+                    child.Name == "FlyPad" or
+                    child.Name == "KzoyzOpusUI"
+                ) then
+                    pcall(function() child:Destroy() end)
+                end
+            end
+        end
+    end
+end)
 local Session = {}
 G.__KzoyzOpus = Session
 local function alive()
@@ -1365,7 +1389,6 @@ local function findRefs()
                 local ok, isWorld = pcall(function()
                     return type(rawget(v, "fg")) == "table" and type(rawget(v, "bg")) == "table"
                         and type(rawget(v, "w")) == "number" and type(rawget(v, "h")) == "number"
-                        and rawget(v, "spawn") ~= nil
                 end)
                 if ok and isWorld then Refs.World = v end
             end
@@ -1901,7 +1924,7 @@ function Anim.quickRefs()
                     if not Refs.World then
                         local ok, isWorld = pcall(function()
                             return type(rawget(u, "fg")) == "table" and type(rawget(u, "bg")) == "table"
-                                and type(rawget(u, "w")) == "number" and rawget(u, "spawn") ~= nil
+                                and type(rawget(u, "w")) == "number"
                         end)
                         if ok and isWorld then Refs.World = u end
                     end
@@ -2435,7 +2458,11 @@ end
 
 local function validate()
     local doPlace = farmMode() ~= "Break saja"
-    if not Refs.World then return "Data world belum ketemu. Tekan 'Hubungkan ke game'" end
+    if not Refs.World then
+        pcall(Anim.quickRefs)
+        if not Refs.World then pcall(findRefs) end
+        if not Refs.World then return "Data world belum ketemu. Tekan 'Hubungkan ke game'" end
+    end
     if next(farmOffsets()) == nil then return "Pilih tile dulu di Grid Tile" end
     if not getPlayerTile() then return "Kamu belum masuk world" end
     if doPlace and not farmBlock() then return "Pilih block dari inventori" end
@@ -8138,38 +8165,6 @@ flyButton("▼", 40, function(v) Misc.DownHeld = v end)
 ---------------------------------------------------------------------
 -- UI WINDUI
 ---------------------------------------------------------------------
--- Pilih bahasa saat execute (sebelum menu dibuat, karena teks menu dipasang sekali)
-do (function()
-    if not I18N.Ask then return end
-    local chosen, late = false, false
-    local function pick(lang)
-        if late then
-            I18N.Saved = lang
-            Config.save(true)
-            notify("Bahasa / Language", "Execute ulang untuk ganti bahasa / Re-execute to apply", 5)
-            return
-        end
-        I18N.Lang, I18N.Saved, chosen = lang, lang, true
-    end
-    local ok = pcall(function()
-        WindUI:Popup({
-            Title = "Victor Ganteng",
-            Icon = "languages",
-            Content = "Pilih bahasa menu\nChoose menu language",
-            Buttons = {
-                { Title = "Indonesia", Variant = I18N.Lang == "id" and "Primary" or "Secondary",
-                    Callback = function() pick("id") end },
-                { Title = "English", Variant = I18N.Lang == "en" and "Primary" or "Secondary",
-                    Callback = function() pick("en") end },
-            },
-        })
-    end)
-    if not ok then return end
-    local t0 = os.clock()
-    while not chosen and os.clock() - t0 < 30 and alive() do task.wait(0.1) end
-    late = not chosen -- tidak dipilih dalam 30 detik: pakai bahasa terakhir
-    if chosen then Config.save(true) end
-end)() end
 
 local Window = I18N.wrap(WindUI:CreateWindow({
     Title = "Victor Ganteng",
@@ -11614,6 +11609,14 @@ end
 
 task.spawn(function()
     reconnect("Victor Ganteng v5.2")
+    local tries = 0
+    while alive() and not Refs.World and tries < 15 do
+        tries += 1
+        task.wait(2)
+        if not Refs.World then
+            pcall(reconnect)
+        end
+    end
     -- Penjaga dari config dinyalakan setelah data pemain ketemu
     -- (supaya pemain yang sudah ada dicatat dulu)
     if Config.saved("Penjaga", "On") == true and alive() then
