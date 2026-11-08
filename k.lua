@@ -1284,7 +1284,7 @@ local function isPunchFn(fn)
         if c == "Empty the Vending Machine first!" then hasVend = true
         elseif c == "newCrack" or c == "HarvestProvider" then hasMark = true end
     end
-    return hasVend and hasMark
+    return hasVend or hasMark
 end
 
 -- Fungsi game yang menggambar tangan karakter saat memukul / memasang
@@ -4273,8 +4273,17 @@ stopClear = function(reason)
 end
 
 local function checkAutoStart()
-    if not Refs.World then return "Data world belum ketemu. Tekan 'Hubungkan ke game'" end
-    if not Refs.Punch then return "Fungsi pukul game belum ketemu. Tekan 'Hubungkan ke game'" end
+    if not Refs.World then
+        pcall(Anim.quickRefs)
+        if not Refs.World then findRefs() end
+        if not Refs.World then return "Data world belum ketemu. Tekan 'Hubungkan ke game'" end
+    end
+    if not Refs.Punch then
+        findRefs()
+        if not Refs.Punch and not (Refs.SetTile or SetTileRemote or (NetOk and Net)) then
+            return "Fungsi pukul game belum ketemu. Tekan 'Hubungkan ke game'"
+        end
+    end
     if not OrigIsDown then return "Kontrol gerak game (WorldMenu.isDown) tidak ketemu" end
     if not playerState() then return "Kamu belum masuk world" end
     return nil
